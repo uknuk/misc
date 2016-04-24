@@ -1,1 +1,2 @@
-# misc
+# Miscellaneous utility scripts
+
