@@ -4,9 +4,8 @@ require 'mechanize'
 
 m = Mechanize.new
 
-URL = 'http://musicmp3spb.org/album'
-
-url = "#{URL}/#{ARGV[0]}.html"
+base = File.read(File.join(ENV['HOME'], '.mscraper')).chop
+url = "#{base}/#{ARGV[0]}.html"
 
 links = []
 fnames = []
