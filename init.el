@@ -1,4 +1,4 @@
-; additional packages which are configured here
+;; additional packages which are configured here
 (setq package-list '(solarized-theme
                      geiser
                      sr-speedbar
@@ -29,16 +29,17 @@
 (setq column-number-mode 1)
 (tool-bar-mode -1)
 (setq inhibit-startup-screen t)
+(setq custom-file "~/.emacs.d/lisp/custom.el")
 
-(if (memq window-system '(mac ns))
-    (progn
-      (exec-path-from-shell-initialize)
+(cond ((eq system-type 'darwin)
+       (when (memq window-system '(mac ns))
+           (exec-path-from-shell-initialize))
       (require 'emulate-mac-keyboard-mode)
       (setq emulate-mac-finnish-keyboard-mode t)
       (setq mac-right-option-modifier nil)
       (setq geiser-guile-binary "/usr/local/bin/guile"))
-  (progn
-    (setq geiser-guile-binary "/usr/bin/guile")))
+      ((eq system-type 'gnu-linux)
+       (setq geiser-guile-binary "/usr/bin/geiser")))
 
 (setq sr-speedbar-auto-refresh nil)
 (setq speedbar-show-unknown-files t)
@@ -84,7 +85,7 @@
   (interactive (list my-term-shell)))
 (ad-activate 'ansi-term)
 
-; finally keyboard shortcuts
+;; finally keyboard shortcuts
 (global-set-key (kbd "C-c t") 'ansi-term)
 (global-set-key (kbd "C-c i") 'indent-region)
 (global-set-key (kbd "C-c c") 'comment-region)
