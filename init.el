@@ -6,7 +6,8 @@
                      web-mode
                      highlight-indentation))
 
-(setq package-archives '(("melpa" . "http://melpa.org/packages/")
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("melpa" . "http://melpa.org/packages/")
                          ("marmalade" . "http://marmalade-repo.org/packages/")))
 
 (package-initialize)
