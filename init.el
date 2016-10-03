@@ -50,16 +50,6 @@
 (setq c-basic-offset 2)
 (setq css-indent-offset 2)
 
-(defun delete-extra-blanks ()
-  (interactive)
-  (delete-duplicate-lines (region-beginning) (region-end) nil t))
-
-(add-hook 'before-save-hook
-          (lambda ()
-            (untabify (point-min) (point-max))
-            (delete-trailing-whitespace)
-            (delete-duplicate-lines (point-min) (point-max) nil t)))
-
 (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
@@ -85,7 +75,19 @@
   (interactive (list my-term-shell)))
 (ad-activate 'ansi-term)
 
-;; finally keyboard shortcuts
+(unless (version<= emacs-version "24.4")
+  (defun delete-extra-blanks ()
+    (interactive)
+    (delete-duplicate-lines (region-beginning) (region-end) nil t)))
+
+(add-hook 'before-save-hook
+          (lambda ()
+            (untabify (point-min) (point-max))
+            (delete-trailing-whitespace)
+            (unless (version<= emacs-version "24.4")
+              (delete-duplicate-lines (point-min) (point-max) nil t))))
+
+; finally keyboard shortcuts
 (global-set-key (kbd "C-c t") 'ansi-term)
 (global-set-key (kbd "C-c i") 'indent-region)
 (global-set-key (kbd "C-c c") 'comment-region)
