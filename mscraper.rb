@@ -4,6 +4,7 @@ require 'mechanize'
 
 m = Mechanize.new
 name = ARGV[0]
+range = ARGV[1]
 
 base = File.read(File.join(ENV['HOME'], '.mscraper')).chop
 url = "#{base}/#{name}.html"
@@ -21,14 +22,18 @@ m.get(url).links_with(href: %r{/download/}).each do |link|
    end
 end
 
+fnames = fnames[0..-10]
+if range
+  eval("fnames = fnames[#{range}]")
+end
 
-last = ARGV[1] ? ARGV[1].to_i : fnames.size - 10
-puts "Downloading #{last} files:"
-fnames = fnames[0..last-1].map {|f| f.sub("#{name}_",'')}
+size = fnames.size
+puts "Downloading #{size} files:"
+fnames.map! {|f| f.sub("#{name}_",'')}
 fnames.each {|f| puts f}
-last.to_i.times.each do |n|
-    puts "Downloading #{fnames[n]}"
+fnames.each_with_index do |fn, n|
+    puts "Downloading #{fn}"
     puts
     flink = links[n].click.forms[1].submit.link_with(href: %r{/download/}).href
-    %x(wget -O #{fnames[n]} #{flink})
+    %x(wget -O #{fn} #{flink})
 end
