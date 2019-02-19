@@ -80,7 +80,10 @@ end
 
 def find2uniq(arr)
   xor = arr.reduce(&:^)
+  puts "xor #{xor.to_s(2)}"
+  puts "~(xor - 1) #{(~(xor - 1)).to_s(2)}"
   mask = xor & ~(xor - 1)
+  puts mask.to_s(2)
 
   x = y = 0
   arr.each {|el| el & mask != 0 ? x ^= el : y ^= el}
