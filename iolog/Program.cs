@@ -14,11 +14,11 @@ namespace iolog
                 Console.WriteLine("Give an address");
                 return;
             }
-            
+
             var addr = args[0];
-            
-            var tOut = args.Length > 1 ? int.Parse(args[1]) : 100; // ms
-            var tEnd = args.Length > 2 ? int.Parse(args[2])*60 : 60; // sec
+            var tEnd = args.Length > 1 ? int.Parse(args[1]) : 60; // sec
+            var tOut = args.Length > 2 ? int.Parse(args[2]) : 100; // ms
+
 
             var tStart = DateTime.Now;
             var dt  = 0;
@@ -29,20 +29,17 @@ namespace iolog
             var rttMax = 0.0;
 
             var ping = new Ping();
-            do 
+            do
             {
                 await Task.Run(async () =>
                 {
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    await new Ping().SendPingAsync(addr, 100000);
-                    sw.Stop();
-                    var rtt = sw.Elapsed.Milliseconds;
+                    var reply = await new Ping().SendPingAsync(addr, 100000);
+                    var rtt = reply.RoundtripTime;
                     dt = (int) DateTime.Now.Subtract(tStart).TotalSeconds;
-                    
+
                     if (rtt < rttMin)
                         rttMin = rtt;
-                    
+
                     if (rtt > rttMax)
                         rttMax = rtt;
 
@@ -50,7 +47,7 @@ namespace iolog
                         nOut++;
                         Console.WriteLine($"{dt}: {rtt} ms");
                     }
-                    
+
                     nSent++;
                     rttTotal += rtt;
                 });
