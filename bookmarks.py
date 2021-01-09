@@ -7,9 +7,9 @@ import getopt
 import traceback
 import argparse
 import re
+import roman
 
-ROOT = path.join(environ['HOME'], 'pr/data/bkm')
-PREFIXES = ["Chapter", "Appendix"]
+ROOT = path.join(environ['HOME'], 'elib/bkm')
 
 
 def print_exc(line):
@@ -17,12 +17,33 @@ def print_exc(line):
     print(exc_type.__name__, ':', exc_value)
     print('line: ', line)
 
+def parse(line, args):
+    *head, tail = line.split()
+    try:
+        page = int(tail) + args.offset
+    except ValueError:
+        try:
+            tail = tail.rstrip()
+            if tail.isupper():
+                print (f"Skipping {line} because of non-nummerical {tail}")
+                page = None
+            else:
+                page = roman.fromRoman(tail.upper()) + args.roman_offset
+        except:
+            print(f"Skipping {line} because of non-nummerical {tail}")
+            page = None
 
-def flat(output, lines, offset):
+    return head,page
+
+
+def flat(output, lines, args):
     for line in lines:
-        *head, tail = line.split()
+        # *head, tail = line.split()
+        head, page = parse(line, args)
+        if not page:
+            continue
+
         title = ' '.join(head)
-        page = int(tail) + offset
         try:
             output.addBookmark(title, page, None)
         except (IndexError, ValueError):
@@ -30,31 +51,53 @@ def flat(output, lines, offset):
             continue
 
 
-def hier(output, lines, offset):
+def hier(output, lines, args):
+    # hierarchical with numbers
     marks = {}
     for line in lines:
         try:
-            hdr, *tail = line.split()
-            if hdr in PREFIXES:
-                hdr, *tail = tail
-
-            if '.' not in hdr:
+            head, page = parse(line, args)
+            if not page:
                 continue
 
-            hdr = hdr.rstrip('.')
-            page = tail.pop()
-            title = hdr + ' ' + ' '.join(tail).replace('.', '')
-            *head, _ = hdr.split('.')
-            parent = marks['.'.join(head)] if len(head) > 0 else None
-            page = int(page) + offset
-            print(title, page, parent)
-            marks[hdr] = output.addBookmark(title, page, parent)
+            index = head[0]
+            if not '.' in head:
+                parent = None
+            else:
+                head = [item for item in head if item != '.']
+                if '.' in index:
+                    *pref, _ = index.split('.')
+                    parent = marks['.'.join(pref)]
+                else:
+                    try:
+                        int(index)
+                        parent = None
+                    except ValueError:
+                        print(f'Skipping {index}')
+
+            title = ' '.join(head)
+            marks[index] = output.addBookmark(title, page, parent)
         except (IndexError, ValueError, KeyError):
             print_exc(line)
             continue
 
 
-def seq(output, lines, offset):
+def auto(output, lines, args):
+    # auto hierarchical
+    for line in lines:
+        hdr, page = parse(line, args);
+
+        if not '.' in hdr:
+            if hdr:
+                parent = output.addBookmark(hdr.pop(), page, None)
+            else:
+                print(f"Skipping {line}")  # content page number
+        else:
+            title = ' '.join([item for item in hdr if item != '.'])
+            output.addBookmark(title, page, parent)
+
+
+def seq(output, lines, args):
     titles = []
     pages = []
     for line in lines:
@@ -65,26 +108,25 @@ def seq(output, lines, offset):
 
 
     for num, title in enumerate(titles):
-        page = int(pages[num]) + offset
+        page = int(pages[num]) + args.offset
         print(title, page)
         output.addBookmark(title, page, None)
 
 
 def main(args):
-    bookmarks = args.bookmarks if args.bookmarks else args.input
-    with open(path.join(ROOT, bookmarks + '_bkm')) as f:
+    with open(path.join(ROOT, "in", args.input + '.txt')) as f:
         lines = [l.rstrip() for l in f.readlines()]
 
     output = PdfFileMerger()
+    pdf_file = args.input + '.pdf'
 
-    with open(path.join(ROOT, args.input + '.pdf'), 'rb') as f:
+    with open(path.join(ROOT, "in", pdf_file), 'rb') as f:
         reader = PdfFileReader(f)
-        # print(reader.trailer["/Root"]["/PageLabels"])
         output.append(reader, import_bookmarks=False)
 
-    globals()[args.fun](output, lines, args.offset)
+    globals()[args.fun](output, lines, args)
 
-    with open(path.join(ROOT, args.input + '_bkm.pdf'), 'wb') as outStream:
+    with open(path.join(ROOT, "out", pdf_file), 'wb') as outStream:
         output.write(outStream)
 
 
@@ -92,7 +134,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input')
     parser.add_argument('fun')
-    parser.add_argument('-b', '--bookmarks')
-    parser.add_argument('-o', '--offset', type=int, default=0)
+    parser.add_argument('offset', type = int)
+    parser.add_argument('-r', '--roman_offset', type=int, default=0)
 
     main(parser.parse_args())
