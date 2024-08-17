@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
-import sys
 import os
 import re
 import argparse
+#from pytube import Playlist
+#from pytube import YouTube
+from moviepy.editor import AudioFileClip
+from unidecode import unidecode
+
+import sys
+sys.path.insert(1, '../../pytube')
+from pytube import __version__
+print(__version__)
 from pytube import Playlist
 from pytube import YouTube
-from moviepy.editor import AudioFileClip
 
 DIR = f"{os.environ['HOME']}/mus"
-REMOVE = r"[\\/'\"\-(),.:]"
+REMOVE = r"[\\/\'\"\-_\.,:!;()…]"
 
 def download(v, title, dest):
     stream = v.streams.filter(only_audio=True).order_by('abr').desc()[0]
@@ -45,15 +52,16 @@ if __name__ == '__main__':
 
         if args.numbers:
             numbers = args.numbers.split(',')
+            # use match from 3.12?
             start = int(numbers[0])
             num = int(numbers[1]) if len(numbers) > 1 else start + 1
             videos = videos[start:] if len(numbers) < 3 else videos[start : int(numbers[2])]
 
         for v in videos:
             print(v.title)
-            title = v.title.replace(args.remove, '') if args.remove else v.title        
-            title = re.sub(REMOVE, '', title)
-            title = re.sub(' +', '_', title) 
+            title = v.title.replace(args.remove, '') if args.remove else v.title
+            title = re.sub(REMOVE, '', unidecode(title))
+            title = re.sub(' +', '_', title.strip())
             track = num if num > 9 else f'0{num}'
             title = f"{track}_{title}"
             download(v, title, dest)
