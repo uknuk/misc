@@ -3,17 +3,10 @@
 import os
 import re
 import argparse
-#from pytube import Playlist
-#from pytube import YouTube
+from pytubefix import Playlist
+from pytubefix import YouTube
 from moviepy.editor import AudioFileClip
 from unidecode import unidecode
-
-import sys
-sys.path.insert(1, '../../pytube')
-from pytube import __version__
-print(__version__)
-from pytube import Playlist
-from pytube import YouTube
 
 DIR = f"{os.environ['HOME']}/mus"
 REMOVE = r"[\\/\'\"\-_\.,:!;()…]"
