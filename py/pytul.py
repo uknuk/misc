@@ -3,13 +3,13 @@
 import os
 import re
 import argparse
+import pyperclip
 from pytubefix import Playlist
 from pytubefix import YouTube
-from moviepy.editor import AudioFileClip
 from unidecode import unidecode
 
-DIR = f"{os.environ['HOME']}/mus"
-REMOVE = r"[\\/\'\"\-_\.,:!;()…]"
+DIR = f"{os.environ['HOME']}/Music"
+REMOVE = r"[\\/\'\"_\.,:!;()…]"
 
 def download(v, title, dest):
     stream = v.streams.filter(only_audio=True).order_by('abr').desc()[0]
@@ -17,17 +17,12 @@ def download(v, title, dest):
     print(title)
     fname = f"{title}.webm"
     stream.download(dest, fname)
-    wpath = f'{dest}/{fname}'
-    clip = AudioFileClip(wpath)
-    mpath = wpath.replace(".webm", ".mp3")
-    clip.write_audiofile(mpath, bitrate=stream.abr.replace('bps',''))
-    os.remove(wpath)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('url')
     parser.add_argument('dest')
+    parser.add_argument('-u', '--url')
     parser.add_argument('-r', '--remove')
     parser.add_argument('-t', '--title')
     parser.add_argument('-n', '--numbers')
@@ -37,6 +32,11 @@ if __name__ == '__main__':
     dest = f'{DIR}/{args.dest}'
     if not os.path.exists(dest):
         os.makedirs(dest)
+
+    if args.url is None:
+        url = pyperclip.paste()
+        print(url)
+        args.url = url
 
     if "list=" in args.url:
         plist = Playlist(args.url)

@@ -18,7 +18,7 @@ for root, dirs, names in os.walk(dir):
         for name in names:
             if old.search(name) != None:
                 new_name = os.path.join(root, re.sub(old, new, name))
-                print new_name
+                print(new_name)
                 if do is True:
                     os.rename(os.path.join(root, name), new_name)
  
